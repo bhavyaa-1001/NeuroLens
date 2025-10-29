@@ -2,7 +2,7 @@
 
 A modular backend system for predicting YOLO losses (box_loss, dfl_loss, class_loss) from image features using XGBoost and SHAP analysis.
 
-## 🚀 Features
+##  Features
 
 - **Image Feature Extraction**: Extracts 7 quality metrics from images
 - **Hyperparameter Optimization**: Uses Optuna for automatic tuning
@@ -11,7 +11,7 @@ A modular backend system for predicting YOLO losses (box_loss, dfl_loss, class_l
 - **FastAPI Backend**: RESTful API for real-time analysis
 - **JSON Output**: Structured results for frontend integration
 
-## 📁 Project Structure
+## � Project Structure
 
 ```
 project/
@@ -30,7 +30,7 @@ project/
 └── README.md                 # This file
 ```
 
-## 🛠️ Installation
+##  Installation
 
 1. **Clone or download the project**
    ```bash
@@ -47,7 +47,7 @@ project/
    mkdir -p models data/uploads
    ```
 
-## 🚀 Usage
+##  Usage
 
 ### Start the Server
 
@@ -117,7 +117,7 @@ curl -X GET "http://localhost:8000/health"
 curl -X GET "http://localhost:8000/models"
 ```
 
-## 🔍 Extracted Features
+##  Extracted Features
 
 The system extracts the following image quality metrics:
 
@@ -129,7 +129,7 @@ The system extracts the following image quality metrics:
 6. **Edge Density**: Proportion of edge pixels
 7. **Colorfulness Index**: Color richness measure
 
-## 🤖 Model Training Pipeline
+##  Model Training Pipeline
 
 1. **Feature Extraction**: Extract 7 quality metrics from uploaded images
 2. **Optuna Optimization**: Find best hyperparameters for each loss type
@@ -137,7 +137,7 @@ The system extracts the following image quality metrics:
 4. **Prediction**: Generate loss predictions for each image
 5. **SHAP Analysis**: Identify most impactful features per image
 
-## 📊 SHAP Output Format
+##  SHAP Output Format
 
 Each image returns:
 ```json
@@ -151,7 +151,7 @@ Each image returns:
 }
 ```
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 - `UPLOAD_DIR`: Directory for uploaded images (default: `data/uploads`)
@@ -163,7 +163,7 @@ Each image returns:
 - Train/validation split: 80/20
 - Random state: 42 (for reproducibility)
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -184,25 +184,25 @@ Each image returns:
 ### Logs
 Check console output for detailed error messages and progress updates.
 
-## 📈 Performance
+##  Performance
 
 - **Feature Extraction**: ~0.1-0.5 seconds per image
 - **Optuna Optimization**: ~2-5 minutes (50 trials)
 - **Model Training**: ~10-30 seconds
 - **SHAP Analysis**: ~1-3 seconds per image
 
-## 🔒 Security Notes
+##  Security Notes
 
 - Configure CORS properly for production
 - Validate file types and sizes
 - Implement authentication if needed
 - Clean up temporary files regularly
 
-## 📝 License
+##  License
 
 This project is for educational and research purposes.
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch
