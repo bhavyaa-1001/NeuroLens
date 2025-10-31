@@ -1,9 +1,13 @@
+// Matches SHAP-style combined output
 export type InferenceResult = {
-  imageName: string;
+  image: string;
   imageUrl?: string;
-  predictedLoss: number;
-  category: 1 | 2 | 3 | 4;
-  parametricDescription: string;
+  loss_box: number;
+  loss_dfl: number;
+  loss_class: number;
+  most_impactful_feature: string;
+  impact_percent: number; // e.g., 67.3
 };
+
 
 

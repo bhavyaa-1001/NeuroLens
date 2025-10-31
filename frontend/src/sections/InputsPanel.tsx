@@ -56,3 +56,4 @@ export default function InputsPanel({ compact = false }: Props) {
 }
 
 
+

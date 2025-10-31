@@ -14,3 +14,10 @@ export const useResultsStore = create<ResultsState>((set) => ({
 }));
 
 
+
+
+
+
+
+
+

@@ -7,7 +7,8 @@ export const nodeApi = axios.create({
 
 export const fastApi = axios.create({
   baseURL: (import.meta as any).env.VITE_FASTAPI_URL || (typeof __FASTAPI_URL__ !== 'undefined' ? __FASTAPI_URL__ : 'http://localhost:8000'),
-  timeout: 60000,
+  timeout: 300000,
 });
+
 
 

@@ -16,15 +16,15 @@ export default function DatasetTable() {
           Refresh
         </button>
       </div>
-      <div className="overflow-auto">
-        <table className="w-full text-sm">
+      <div className="overflow-auto max-h-96">
+        <table className="w-full text-sm table-fixed">
           <thead className="text-left text-xs uppercase text-slate-300">
             <tr className="border-y border-white/10">
-              <th className="px-3 py-2">ID</th>
-              <th className="px-3 py-2">Image Name</th>
-              <th className="px-3 py-2">Preview</th>
-              <th className="px-3 py-2">Annotated By</th>
-              <th className="px-3 py-2">Completed</th>
+              <th className="px-3 py-2 w-16">ID</th>
+              <th className="px-3 py-2 w-48">Image Name</th>
+              <th className="px-3 py-2 w-20">Preview</th>
+              <th className="px-3 py-2 w-24">Annotated By</th>
+              <th className="px-3 py-2 w-20">Completed</th>
             </tr>
           </thead>
           <tbody>
@@ -36,16 +36,20 @@ export default function DatasetTable() {
             )}
             {images.map((img) => (
               <tr key={img._id} className="border-b border-white/5 hover:bg-white/5">
-                <td className="px-3 py-2 text-xs opacity-70">{img._id.slice(-6)}</td>
-                <td className="px-3 py-2">{img.name}</td>
+                <td className="px-3 py-2 text-xs opacity-70 font-mono">{img._id.slice(-6)}</td>
+                <td className="px-3 py-2">
+                  <div className="truncate" title={img.name}>
+                    {img.name}
+                  </div>
+                </td>
                 <td className="px-3 py-2">
                   {img.url ? (
-                    <img src={img.url} alt={img.name} className="h-10 w-16 object-cover rounded" />
+                    <img src={img.url} alt={img.name} className="h-12 w-16 object-cover rounded" />
                   ) : (
                     <span className="text-xs opacity-60">(no preview)</span>
                   )}
                 </td>
-                <td className="px-3 py-2">{img.annotatedBy || '-'}</td>
+                <td className="px-3 py-2 text-center">{img.annotatedBy || '-'}</td>
                 <td className="px-3 py-2">
                   <span className={`px-2 py-0.5 rounded text-xs ${img.completed ? 'bg-green-600/30 text-green-300' : 'bg-slate-700/50 text-slate-300'}`}>
                     {img.completed ? 'Yes' : 'No'}
@@ -59,5 +63,6 @@ export default function DatasetTable() {
     </div>
   );
 }
+
 
 

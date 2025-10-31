@@ -1,7 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import DashboardPage from '@/pages/DashboardPage';
 import WorkspacePage from '@/pages/WorkspacePage';
+import { resetDataset } from '@/services/nodeApi';
+import { useDatasetStore } from '@/state/datasetStore';
+import { useResultsStore } from '@/state/resultsStore';
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,6 +16,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-slate-200 bg-gradient-to-b from-primary-950 to-slate-950">
+      {/* Clear dataset on each app mount/refresh */}
+      <AppBootstraps />
       <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-4">
           <button
@@ -48,3 +53,19 @@ export default function App() {
 }
 
 
+
+
+function AppBootstraps() {
+  const { refreshImages } = useDatasetStore();
+  const { clear } = useResultsStore();
+  useEffect(() => {
+    // Clear backend dataset and then refresh UI + clear results
+    resetDataset()
+      .then(() => {
+        clear();
+        return refreshImages();
+      })
+      .catch(() => {});
+  }, [refreshImages, clear]);
+  return null;
+}

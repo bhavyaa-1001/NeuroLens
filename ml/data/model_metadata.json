@@ -1,0 +1,57 @@
+{
+  "model_paths": {
+    "box_loss": "models/xgb_optuna_box_loss.json",
+    "dfl_loss": "models/xgb_optuna_dfl_loss.json",
+    "class_loss": "models/xgb_optuna_class_loss.json"
+  },
+  "performance_metrics": {
+    "box_loss": {
+      "best_mae": 0.4998684934377336,
+      "final_mae": 0.4998403161261877,
+      "r2_score": -0.007179660861214687,
+      "best_params": {
+        "n_estimators": 476,
+        "max_depth": 8,
+        "learning_rate": 0.01327973720922775,
+        "subsample": 0.8700385395901229,
+        "colsample_bytree": 0.588717060331007,
+        "min_child_weight": 1,
+        "gamma": 1.5181167563029743,
+        "reg_lambda": 0.045398719623492255,
+        "reg_alpha": 5.142125545590751
+      }
+    },
+    "dfl_loss": {
+      "best_mae": 0.32009445685411625,
+      "final_mae": 0.3183105861572624,
+      "r2_score": -0.049274940977583004,
+      "best_params": {
+        "n_estimators": 709,
+        "max_depth": 5,
+        "learning_rate": 0.08446186159120489,
+        "subsample": 0.5137027391921394,
+        "colsample_bytree": 0.9210025441824308,
+        "min_child_weight": 5,
+        "gamma": 1.4682875966405378,
+        "reg_lambda": 5.921101294658955,
+        "reg_alpha": 0.01973322617846083
+      }
+    },
+    "class_loss": {
+      "best_mae": 0.7328373750213044,
+      "final_mae": 0.7324252840159924,
+      "r2_score": 0.03346051630127167,
+      "best_params": {
+        "n_estimators": 606,
+        "max_depth": 3,
+        "learning_rate": 0.2518732179273307,
+        "subsample": 0.9187852811675754,
+        "colsample_bytree": 0.9249261048151557,
+        "min_child_weight": 3,
+        "gamma": 1.585445183403432,
+        "reg_lambda": 0.06589444012018228,
+        "reg_alpha": 0.16062479540834368
+      }
+    }
+  }
+}

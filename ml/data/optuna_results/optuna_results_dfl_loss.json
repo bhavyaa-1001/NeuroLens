@@ -1,0 +1,25 @@
+{
+  "best_params": {
+    "n_estimators": 709,
+    "max_depth": 5,
+    "learning_rate": 0.08446186159120489,
+    "subsample": 0.5137027391921394,
+    "colsample_bytree": 0.9210025441824308,
+    "min_child_weight": 5,
+    "gamma": 1.4682875966405378,
+    "reg_lambda": 5.921101294658955,
+    "reg_alpha": 0.01973322617846083
+  },
+  "best_mae": 0.32009445685411625,
+  "final_mae": 0.3183105861572624,
+  "r2_score": -0.049274940977583004,
+  "features": [
+    "laplacian_variance",
+    "snr",
+    "mean_brightness",
+    "rms_contrast",
+    "entropy",
+    "edge_density",
+    "colorfulness_index"
+  ]
+}

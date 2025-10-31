@@ -17,4 +17,11 @@ export async function listImages(): Promise<DatasetImage[]>
   return data?.images ?? [];
 }
 
+export async function resetDataset(): Promise<{ ok: boolean }>
+{
+  const { data } = await nodeApi.delete('/api/datasets');
+  return data;
+}
+
+
 

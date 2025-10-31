@@ -18,3 +18,10 @@ VITE_FASTAPI_URL=http://localhost:8000
 - Recharts
 - Axios
 - Zustand state
+
+
+
+
+
+
+
