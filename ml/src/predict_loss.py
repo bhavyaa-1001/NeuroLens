@@ -144,23 +144,54 @@ def load_models_from_directory(models_dir: str) -> dict:
     Returns:
         Dictionary mapping loss types to loaded models
     """
-    models_dir = Path(models_dir)
     models = {}
+    models_path = Path(models_dir)
     
-    loss_types = ['box_loss', 'dfl_loss', 'class_loss']
+    if not models_path.exists():
+        print(f"❌ Models directory does not exist: {models_path}")
+        return models
+        
+    print(f"🔍 Looking for models in: {models_path.absolute()}")
     
-    for loss_type in loss_types:
-        model_file = models_dir / f"xgb_optuna_{loss_type}.json"
-        if model_file.exists():
-            try:
+    # First try to load .json models
+    model_files = list(models_path.glob("xgb_optuna_*.json"))
+    
+    # If no .json files found, try .pkl files
+    if not model_files:
+        model_files = list(models_path.glob("xgb_optuna_*.pkl"))
+    
+    if not model_files:
+        print(f"ℹ️ No model files found in {models_path}")
+        return models
+    
+    for model_file in model_files:
+        loss_type = model_file.stem.replace("xgb_optuna_", "")
+        try:
+            if model_file.suffix == '.json':
                 model = XGBRegressor()
                 model.load_model(str(model_file))
+            else:  # .pkl file
+                import pickle
+                with open(model_file, 'rb') as f:
+                    model = pickle.load(f)
+            
+            # Verify the model is properly loaded
+            if hasattr(model, 'predict'):
                 models[loss_type] = model
-                print(f"✅ Loaded model for {loss_type}")
-            except Exception as e:
-                print(f"❌ Error loading model for {loss_type}: {e}")
-        else:
-            print(f"⚠️  Model file not found: {model_file}")
+                print(f"✅ Successfully loaded model for {loss_type} from {model_file}")
+                print(f"   Model parameters: {model.get_params()}")
+            else:
+                print(f"❌ Invalid model in {model_file}: missing predict method")
+                
+        except Exception as e:
+            print(f"❌ Failed to load model {model_file}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+    
+    if not models:
+        print("⚠️ No valid models were loaded")
+    else:
+        print(f"Loaded {len(models)} models: {list(models.keys())}")
     
     return models
 

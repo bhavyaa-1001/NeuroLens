@@ -15,6 +15,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import json
+from xgboost import XGBRegressor
+
 from typing import List
 
 # Import our modules
@@ -234,34 +236,111 @@ async def run_xgboost(
         if not images_dir.exists():
             return {"results": []}
 
-        # Extract features
-        features_df = extract_features(str(images_dir))
-        print(f"Extracted features rows: {len(features_df)}")
-        if features_df.empty:
-            return {"results": []}
+        # Extract features with detailed logging
+        print("\n" + "="*50)
+        print("FEATURE EXTRACTION")
+        print("="*50)
+        try:
+            features_df = extract_features(str(images_dir))
+            print(f"✅ Extracted features from {len(features_df)} images")
+            if not features_df.empty:
+                print("\nSample of extracted features:")
+                print(features_df.head().to_string())
+            else:
+                print("❌ No features were extracted from the images")
+                print("Checking directory contents:")
+                print(f"Directory: {images_dir}")
+                print("Files found:")
+                for f in images_dir.glob("*"):
+                    print(f"- {f.name} ({f.stat().st_size} bytes)")
+                return {"results": [], "error": "No features extracted. Check if images exist and are valid."}
+        except Exception as e:
+            print(f"❌ Error during feature extraction: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {"results": [], "error": f"Feature extraction failed: {str(e)}"}
 
-        # Try loading models; check server/models/, root models/, and src/
+        # Try loading models; check in order of most likely locations
         model_paths = {}
         for loss_type in ['box_loss', 'dfl_loss', 'class_loss']:
-            # First check ml/server/models/ (where models are actually saved)
+            # Check ml/server/models/ first (current working directory when running from server/)
             candidate = SERVER_MODELS_DIR / f"xgb_optuna_{loss_type}.json"
             if not candidate.exists():
-                # Fallback to ml/models/
+                # Check ml/models/ (root models directory)
                 candidate = MODELS_DIR / f"xgb_optuna_{loss_type}.json"
             if not candidate.exists():
-                # Finally check ml/src/
+                # Check ml/src/ (source directory)
                 candidate = SRC_MODELS_DIR / f"xgb_optuna_{loss_type}.json"
+            if not candidate.exists():
+                # Check for .pkl version
+                candidate = SERVER_MODELS_DIR / f"xgb_optuna_{loss_type}.pkl"
+            
             if candidate.exists():
                 model_paths[loss_type] = str(candidate)
                 print(f"✅ Found model for {loss_type} at {candidate}")
+                # Verify the model can be loaded
+                try:
+                    if candidate.suffix == '.json':
+                        model = XGBRegressor()
+                        model.load_model(str(candidate))
+                    else:  # .pkl
+                        import pickle
+                        with open(candidate, 'rb') as f:
+                            model = pickle.load(f)
+                    print(f"   Model loaded successfully with {model.n_estimators if hasattr(model, 'n_estimators') else 'unknown'} trees")
+                except Exception as e:
+                    print(f"   ❌ Failed to load model: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print(f"❌ No model found for {loss_type} in any location. Checked: {candidate}")
 
         results = []
         image_names = features_df['image_name'].tolist() if 'image_name' in features_df.columns else [f"image_{i}" for i in range(len(features_df))]
 
         if model_paths:
-            print(f"Loaded models found for: {list(model_paths.keys())}")
-            # Predict per-loss values
-            predictions_df = predict_all_losses(features_df, model_paths)
+            print("\n" + "="*50)
+            print("MODEL PREDICTION")
+            print("="*50)
+            print(f"Found models for: {list(model_paths.keys())}")
+            
+            try:
+                # Predict per-loss values
+                print("\nCalling predict_all_losses...")
+                predictions_df = predict_all_losses(features_df, model_paths)
+                
+                if predictions_df is None or predictions_df.empty:
+                    print("❌ No predictions were returned from predict_all_losses")
+                    return {"results": [], "error": "Prediction failed: No results returned"}
+                    
+                print("\nPrediction results summary:")
+                print(f"- Rows in predictions: {len(predictions_df)}")
+                print("\nSample predictions:")
+                print(predictions_df.head().to_string())
+                
+                # Format results to match expected output
+                results = []
+                for idx, row in predictions_df.iterrows():
+                    image_name = row.get('image_name', f"image_{idx}")
+                    result = {
+                        'image': image_name,
+                        'imageUrl': f"{os.environ.get('NODE_PUBLIC_URL', 'http://localhost:4000')}/uploads/{image_name}",
+                        'loss_box': float(row.get('predicted_box_loss', 0.0)),
+                        'loss_dfl': float(row.get('predicted_dfl_loss', 0.0)),
+                        'loss_class': float(row.get('predicted_class_loss', 0.0)),
+                        'impact_percent': 0.0,  # Will be calculated later
+                        'Name_in': image_name
+                    }
+                    results.append(result)
+                
+                return {"results": results}
+                
+            except Exception as e:
+                print(f"❌ Error during prediction: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return {"results": [], "error": f"Prediction failed: {str(e)}"}
+                
             # Attach predicted columns to features for SHAP module consumption if needed
             features_with_preds = features_df.copy()
             for col in ['box_loss', 'dfl_loss', 'class_loss']:
@@ -269,26 +348,39 @@ async def run_xgboost(
                 if pred_col in predictions_df.columns:
                     features_with_preds[pred_col] = predictions_df[pred_col]
 
-            # Full SHAP-style output matching the screenshot format
-            # Pass features_with_preds so SHAP result includes per-loss predictions
-            shap_results = analyze_all_models(features_with_preds, model_paths, image_names)
-            combined = combine_shap_results(shap_results)
-            # Normalize/round fields and add aliases expected by UI/CSV
-            for item in combined:
-                img_name = item.get('image')
-                item['imageUrl'] = f"{os.environ.get('NODE_PUBLIC_URL', 'http://localhost:4000')}/uploads/{img_name}"
-                # Round numeric fields
-                for k in ['loss_box', 'loss_dfl', 'loss_class']:
-                    val = item.get(k)
-                    if isinstance(val, (int, float)) and not (isinstance(val, float) and (pd.isna(val) or np.isnan(val))):
-                        item[k] = float(f"{val:.4f}")
-                    else:
-                        item[k] = 0.0000
-                if 'impact_percent' in item and isinstance(item['impact_percent'], (int, float)):
-                    item['impact_percent'] = float(f"{item['impact_percent']:.1f}")
-                # CSV alias
-                item['Name_in'] = img_name
-            return {"results": combined}
+            try:
+                # Full SHAP-style output matching the screenshot format
+                print("\nRunning SHAP analysis...")
+                shap_results = analyze_all_models(features_with_preds, model_paths, image_names)
+                combined = combine_shap_results(shap_results)
+                
+                # Format results to match expected output
+                results = []
+                for item in combined:
+                    img_name = item.get('image')
+                    if not img_name:
+                        continue
+                        
+                    result = {
+                        'image': img_name,
+                        'imageUrl': f"{os.environ.get('NODE_PUBLIC_URL', 'http://localhost:4000')}/uploads/{img_name}",
+                        'loss_box': float(item.get('loss_box', 0.0)),
+                        'loss_dfl': float(item.get('loss_dfl', 0.0)),
+                        'loss_class': float(item.get('loss_class', 0.0)),
+                        'impact_percent': float(f"{item.get('impact_percent', 0.0):.1f}"),
+                        'Name_in': img_name
+                    }
+                    results.append(result)
+                
+                print(f"\n✅ Successfully generated {len(results)} results with SHAP analysis")
+                return {"results": results}
+                
+            except Exception as e:
+                print(f"❌ Error in SHAP analysis: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                # Return results even if SHAP fails
+                return {"results": results if 'results' in locals() else []}
         else:
             print("No trained models found; quickly training lightweight models with dummy targets…")
             # Create lightweight dummy targets and run a very small optuna tuning + training
